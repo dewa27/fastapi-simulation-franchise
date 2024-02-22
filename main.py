@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.encoders import jsonable_encoder
 import jwt
 from dotenv import load_dotenv
+import uvicorn
 import os
 # Load environment variables from .env file
 load_dotenv()
@@ -283,6 +284,10 @@ def read_item(init:InitRequest,response_model=List[MonthlySales]):
     }
     return responses
 
+# if __name__ == "__main__":
+#     import uvicorn
+#     uvicorn.run(app, host="127.0.0.1", port=8000)
+
+
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+  uvicorn.run("app", host="0.0.0.0", port=8000, reload=True)
