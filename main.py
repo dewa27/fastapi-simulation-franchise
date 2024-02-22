@@ -2,7 +2,7 @@ from typing import Union,List
 import math
 from fastapi import FastAPI
 from pydantic import BaseModel,validator
-import pandas as pd
+# import pandas as pd
 from typing import Optional, Any
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.middleware.cors import CORSMiddleware
