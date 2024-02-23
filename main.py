@@ -116,6 +116,7 @@ class MonthlyIncomeProfit(BaseModel):
     ord_income:float=0
     cum_profit:float=0
     partner_profit:float=0
+    partner_cum_profit:float=0
 
 class MonthlySales(BaseModel):
     month:int
@@ -218,9 +219,9 @@ def read_root():
     return {"Hello": "World"}
 
 
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: Union[str, None] = None):
-    return {"item_id": item_id, "q": q}
+# @app.get("/items/{item_id}")
+# def read_item(item_id: int, q: Union[str, None] = None):
+#     return {"item_id": item_id, "q": q}
 
 
 @app.post("/count-sales/")
@@ -263,7 +264,7 @@ def read_item(init:InitRequest,response_model=List[MonthlySales]):
             )
             monthly_cog=m_sales.calc_cog(mep_base_cost=init.mep_monthly,teaching_cost=init.teaching_cost,ck_cost=init.ck_cost)
             monthly_sga=m_sales.calc_sga(admin_cost=init.admin_cost,marketing_cost=init.marketing_cost,ruko_rent=init.ruko_rent)
-            m_sales.calc_profit(total_invest)
+            m_sales.calc_profit(total_invest,prev_partner_cum_profit=0)
             # m_sales.profit.cum_profit=initInvestment["total_invest"]+m_sales.profit.ord_income
         else:
             cr_drop_st=math.ceil(sales_list[i-1].active_st*0.04)
@@ -284,7 +285,7 @@ def read_item(init:InitRequest,response_model=List[MonthlySales]):
                 monthly_sga=m_sales.calc_sga(admin_cost=init.admin_cost,marketing_cost=init.marketing_cost,ruko_rent=init.ruko_rent)
             else:
                 monthly_sga=m_sales.calc_sga(admin_cost=init.admin_cost,marketing_cost=init.marketing_cost,ruko_rent=0)
-            m_sales.calc_profit(sales_list[i-1].profit.cum_profit)
+            m_sales.calc_profit(sales_list[i-1].profit.cum_profit,prev_partner_cum_profit=sales_list[i-1].profit.partner_cum_profit)
 
         total_expenses+=monthly_cog+monthly_sga
         total_revenue+=m_sales.total_sales
