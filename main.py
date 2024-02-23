@@ -86,6 +86,7 @@ class InitRequest(BaseModel):
     marketing_cost: float
     mep_monthly:float
     license_fee:float
+    is_vp:bool
 
 class MonthlyCOG(BaseModel):
     class_sess_num:int = 0
@@ -114,6 +115,7 @@ class MonthlyIncomeProfit(BaseModel):
     gross_profit:float=0
     ord_income:float=0
     cum_profit:float=0
+    partner_profit:float=0
 
 class MonthlySales(BaseModel):
     month:int
@@ -180,10 +182,13 @@ class MonthlySales(BaseModel):
         self.sga.total_sga=self.sga.marketing_cost+self.sga.admin_cost+self.sga.others_cost+self.sga.ruko_rent+self.sga.bm_cost
         return self.sga.total_sga
 
-    def calc_profit(self, prev_cum_profit):
+    def calc_profit(self, prev_cum_profit,prev_partner_cum_profit):
         self.profit.gross_profit=self.total_sales - self.cog.total_cog
         self.profit.ord_income=self.profit.gross_profit-self.sga.total_sga
         self.profit.cum_profit=prev_cum_profit+self.profit.ord_income
+        self.profit.partner_profit=self.cog.royalty_cost
+        self.profit.partner_cum_profit=prev_partner_cum_profit+self.profit.partner_profit
+
         
         
 class LoginItem(BaseModel):
@@ -220,19 +225,23 @@ def read_item(item_id: int, q: Union[str, None] = None):
 
 @app.post("/count-sales/")
 def read_item(init:InitRequest,response_model=List[MonthlySales]):
-    # return init
-    # count initial investment
-    # teaching_cost=init.teaching_cost
-    # ck_cost=init.ck_cost
-    # mep_base_cost=init.mep_monthly
-    initInvestment = {
-      "mep": init.mep,
-      "off_facility": init.off_facility,
-      "off_renov": init.off_renov,
-      "ruko_rent": init.ruko_rent,
-      "t_material": init.t_material,
-      "license_fee":init.license_fee
-    }
+    initInvestment=0
+    if(init.is_vp):
+        initInvestment = {
+            "mep": init.mep,
+            "off_facility": init.off_facility,
+            "off_renov": init.off_renov,
+            "ruko_rent": init.ruko_rent,
+        }
+    else:
+        initInvestment = {
+            "mep": init.mep,
+            "off_facility": init.off_facility,
+            "off_renov": init.off_renov,
+            "ruko_rent": init.ruko_rent,
+            "t_material": init.t_material,
+            "license_fee":init.license_fee
+        }
     total_invest=-sum(initInvestment.values())
     # initInvestment["total_invest"]=total_invest
     total_expenses=0
@@ -280,20 +289,15 @@ def read_item(init:InitRequest,response_model=List[MonthlySales]):
         total_expenses+=monthly_cog+monthly_sga
         total_revenue+=m_sales.total_sales
         sales_list.append(m_sales)
-    # data = {
-    #     'New Students': [init.new_st],
-    #     'Class Price':[init.class_price],
-    #     'Class Kit Price':[init.ckit_price],
-    # }
-    # df=pd.DataFrame(data)
-    # return {'data':df.to_dict(orient='records')}
     responses={
+        "is_vp":init.is_vp,
         "monthly_sales":sales_list,
         "total_investment":total_invest*-1,
         "total_expenses":total_expenses,
         "total_revenue":total_revenue
     }
     return responses
+
 
 # if __name__ == "__main__":
 #     import uvicorn
